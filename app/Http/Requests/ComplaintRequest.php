@@ -28,6 +28,7 @@ class ComplaintRequest extends FormRequest
             'description' => 'required|string',
             'image' => 'nullable|image|max:2048',
             'file' => 'nullable|file|max:5120',
+            'notesForEmployee'=>'nullable|string'
         ];
 
     }

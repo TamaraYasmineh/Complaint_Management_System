@@ -10,9 +10,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -28,6 +26,9 @@ class User extends Authenticatable
         'locked_until',
         'failed_attempts',
         'email_verified_at',
+        'department',
+        'userId'
+
     ];
 
     /**
@@ -55,6 +56,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Otp::class);
     }
-    }    
-    
+    }
+
 

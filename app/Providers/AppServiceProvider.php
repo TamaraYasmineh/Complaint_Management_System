@@ -17,8 +17,10 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void { $roles = [ 'citizen', 'employee', 'admin']; 
-        foreach ($roles as $role) { 
-            Role::firstOrCreate(['name' => $role]); 
-        } }
+    public function boot(): void {
+        $roles = [ 'citizen', 'employee', 'admin'];
+        foreach ($roles as $role) {
+            Role::firstOrCreate(['name' => $role]);
+        }
+     }
 }

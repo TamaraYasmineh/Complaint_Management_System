@@ -9,6 +9,7 @@ class ComplaintService
 {
     public function createComplaint(array $data): Complaint
     {
+
         if (isset($data['image'])) {
             $data['image'] = $data['image']->store('complaints/images', 'public');
         }
@@ -16,7 +17,7 @@ class ComplaintService
         if (isset($data['file'])) {
             $data['file'] = $data['file']->store('complaints/files', 'public');
         }
-        $data['userId'] = Auth::id();
+        $data['userId'] =auth()->id();
         return Complaint::create($data);
     }
 }
