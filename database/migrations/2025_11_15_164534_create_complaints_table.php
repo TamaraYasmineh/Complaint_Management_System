@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('description');
             $table->string('image')->nullable();
             $table->string('file')->nullable();
+            $table->string('notesForEmployee')->nullable();
             $table->string('referenceNumber')->nullable()->unique();
             $table->enum('status',['new','pending','completed','rejected'])->default('new');
             $table->unsignedBigInteger('userId');

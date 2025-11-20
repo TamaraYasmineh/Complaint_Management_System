@@ -22,6 +22,7 @@ class Complaint extends Model
         'description',
         'image',
         'file',
+        'notesForEmployee',
         'status',
         'userId'
     ];
