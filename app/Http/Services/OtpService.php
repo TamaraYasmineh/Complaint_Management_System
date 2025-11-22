@@ -4,7 +4,8 @@ namespace App\Http\Services;
 
 use App\Models\Otp;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserLoginOtp;
 class OtpService
 {
     public function generate($user, $purpose = 'login')
@@ -16,7 +17,9 @@ class OtpService
             'code' => Hash::make($code),
             'purpose' => $purpose,
         ]);
-
+        if ($user->email) {
+            Mail::to($user->email)->send(new UserLoginOtp($code));
+          }
         return $code; 
     }
 

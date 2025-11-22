@@ -55,7 +55,13 @@ class User extends Authenticatable
     public function otps()
     {
         return $this->hasMany(Otp::class);
+    
     }
+    public function activityLogs()
+{
+    return $this->hasMany(Activity_log::class);
+}
+
     }
 
 
