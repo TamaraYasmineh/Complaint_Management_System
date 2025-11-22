@@ -30,7 +30,7 @@ Route::middleware(['auth:sanctum', 'role:admin|employee'])->group(function () {
 Route::get('/countAllComplaints',[ComplaintController::class, 'countAllComplaints']);
 Route::get('/countPendingComplaints',[ComplaintController::class, 'countPendingComplaints']);
 Route::get('/countNewComplaints',[ComplaintController::class, 'countNewComplaints']);
-Route::post('/updateComplaint/{id}', [ComplaintController::class, 'updateComplaint']);
+//Route::post('/updateComplaint/{id}', [ComplaintController::class, 'updateComplaint']);
 
 });
 Route::middleware(['auth:sanctum', 'role:employee'])->group(function () {
@@ -41,3 +41,4 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 Route::get('/showAllComplaints',[ComplaintController::class, 'showAllComplaints']);
 
     });
+    Route::post('/updateComplaint/{id}', [ComplaintController::class, 'updateComplaint']);
