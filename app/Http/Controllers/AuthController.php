@@ -22,7 +22,7 @@ class AuthController extends BaseController
     }
     public function user_register(UserRegisterRequest $request)
 {
-    $input = $request->only(['name', 'email', 'password']);
+    $input = $request->only(['name', 'email', 'password','department']);
     $input['password'] = bcrypt($input['password']);
     $input['activation_token'] = Str::random(60);
     $user = User::create($input);
@@ -145,7 +145,7 @@ if (!$user) {
     return $this->sendError('User not authenticated', [], 401);
 }
 if ($request->user()->currentAccessToken()) {
-    $request->user()->currentAccessToken()->delete();
+    $request->user()->tokens()->delete();
 }
 $user->delete();
 return $this->sendResponse(null, 'Account deleted successfully');
