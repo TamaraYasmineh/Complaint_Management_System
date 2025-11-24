@@ -22,7 +22,7 @@ class AuthController extends BaseController
     }
     public function user_register(UserRegisterRequest $request)
 {
-    $input = $request->only(['name', 'email', 'password']);
+    $input = $request->only(['name', 'email', 'password','department']);
     $input['password'] = bcrypt($input['password']);
     $input['activation_token'] = Str::random(60);
     $user = User::create($input);
@@ -36,14 +36,56 @@ class AuthController extends BaseController
     return $this->sendResponse($data, "User Registered Successfully");
 }
 
-public function user_login(UserLoginRequest $request)
+public function citizen_login(UserLoginRequest $request)
 {
     $user = User::where('email', $request->email)->first();
 
     if (!$user || !Hash::check($request->password, $user->password)) {
         return $this->sendError('Incorrect email or password', [], 401);
     }
-    $purpose = $user->hasAnyRole(['admin', 'employee', 'citizen']);
+    $purpose = $user->hasAnyRole(['citizen']);
+
+    $user->otps()->where('purpose', $purpose)->delete();
+
+    $otpCode = $this->otpService->generate($user, $purpose);
+
+    Mail::to($user->email)->send(new UserLoginOtp($otpCode));
+
+    return $this->sendResponse([
+        'email' => $user->email,
+        'purpose' => $purpose,
+        'message' => 'OTP sent to your email'
+    ], "Password Verified — Awaiting OTP");
+}
+public function employee_login(UserLoginRequest $request)
+{
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return $this->sendError('Incorrect email or password', [], 401);
+    }
+    $purpose = $user->hasAnyRole(['employee']);
+
+    $user->otps()->where('purpose', $purpose)->delete();
+
+    $otpCode = $this->otpService->generate($user, $purpose);
+
+    Mail::to($user->email)->send(new UserLoginOtp($otpCode));
+
+    return $this->sendResponse([
+        'email' => $user->email,
+        'purpose' => $purpose,
+        'message' => 'OTP sent to your email'
+    ], "Password Verified — Awaiting OTP");
+}
+public function admin_login(UserLoginRequest $request)
+{
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return $this->sendError('Incorrect email or password', [], 401);
+    }
+    $purpose = $user->hasAnyRole(['admin']);
 
     $user->otps()->where('purpose', $purpose)->delete();
 
@@ -103,7 +145,7 @@ if (!$user) {
     return $this->sendError('User not authenticated', [], 401);
 }
 if ($request->user()->currentAccessToken()) {
-    $request->user()->currentAccessToken()->delete();
+    $request->user()->tokens()->delete();
 }
 $user->delete();
 return $this->sendResponse(null, 'Account deleted successfully');
