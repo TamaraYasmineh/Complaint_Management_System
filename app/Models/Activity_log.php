@@ -11,8 +11,8 @@ class Activity_log extends Model
     ];
 
     protected $casts = [
-        'before' => 'array',
-        'after' => 'array',
+        'before' => 'string',
+        'after'  => 'string',
     ];
     public function user()
 {

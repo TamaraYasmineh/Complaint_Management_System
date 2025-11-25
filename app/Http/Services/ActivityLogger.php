@@ -11,10 +11,8 @@ class ActivityLogger
         Activity_log::create([
             'user_id' => Auth::id(),
             'action' => $action,
-            'auditable_type' => $model ? get_class($model) : null,
-            'auditable_id' => $model?->id,
-            'before' => $before,
-            'after' => $after,
+            'before' => $before ? json_encode($before, JSON_UNESCAPED_UNICODE) : null,
+            'after' => $after ? json_encode($after, JSON_UNESCAPED_UNICODE) : null,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);

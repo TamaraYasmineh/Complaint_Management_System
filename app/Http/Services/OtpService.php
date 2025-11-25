@@ -3,36 +3,37 @@
 namespace App\Http\Services;
 
 use App\Mail\UserLoginOtp;
-use App\Models\Otp;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 
 class OtpService
 {
     public function generate($user, $purpose = 'login')
     {
         $code = rand(100000, 999999);
-        Otp::create([
-            'user_id' => $user->id,
-            'target' => $user->email ?? $user->phone,
-            'code' => Hash::make($code),
-            'purpose' => $purpose,
-        ]);
+        $cacheKey = "otp_{$user->id}_{$purpose}";
+
+        Cache::put($cacheKey, Hash::make($code), now()->addMinutes(5));
+
         if ($user->email) {
             Mail::to($user->email)->send(new UserLoginOtp($code));
-          }
+        }
+
         return $code;
     }
 
     public function verify($user, $code, $purpose = 'login')
     {
-        $otp = Otp::where('user_id', $user->id)
-        ->where('purpose', $purpose)
-        ->latest()
-        ->first();
+        $cacheKey = "otp_{$user->id}_{$purpose}";
+        $hashedCode = Cache::get($cacheKey);
 
-        if (!$otp) return false;
+        if ($hashedCode && Hash::check($code, $hashedCode)) {
+            Cache::forget($cacheKey);
+            return true;
+        }
 
-        return Hash::check($code, $otp->code);
+        return false;
     }
 }
+
