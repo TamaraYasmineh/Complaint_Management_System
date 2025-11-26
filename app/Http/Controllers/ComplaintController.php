@@ -15,13 +15,19 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Services\ActivityLogger;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Permission\Traits\HasRoles;
+use App\Http\Services\FirebaseService;
+
 class ComplaintController extends Controller
 {
     protected ComplaintService $service;
+    protected FirebaseService $firebase;
 
-    public function __construct(ComplaintService $service)
+    public function __construct(ComplaintService $service,FirebaseService $firebase)
     {
         $this->service = $service;
+        $this->firebase = $firebase;
+
     }
     public function store(ComplaintRequest $request)
     {
@@ -32,57 +38,38 @@ class ComplaintController extends Controller
 
     public function showAllComplaints()
     {
-        $complaints = Complaint::all();
+        $complaints = Complaint::paginate(20);
         return GetComplaintResource::collection($complaints);
     }
 
     public function countAllComplaints()
     {
-        // $count = Complaint::count();
+        $count = Complaint::count();
 
-        // return response()->json([
-        //     'totalComplaints' => $count
-        // ]);
-        $count = Cache::remember('total_complaints_count', 60, function () {
-        return Complaint::count();
-    });
+        return response()->json([
+            'totalComplaints' => $count
+        ]);
 
-    return response()->json([
-        'totalComplaints' => $count
-    ]);
     }
 
-    // public function countPendingComplaints()
-    // {
-        
-    //     $count = Complaint::where('status', 'pending')->count();
-
-    //     return response()->json([
-    //         'pending_complaints' => $count
-    //     ]);
-    // }
     public function countPendingComplaints()
     {
-        $count = Cache::remember('pending_complaints', 60, function() {
-            return Complaint::where('status', 'pending')->count();
-        });
-    
-        return response()->json(['pending_complaints' => $count]);
+
+        $count = Complaint::where('status', 'pending')->count();
+
+        return response()->json([
+            'pending_complaints' => $count
+        ]);
     }
+
     public function countNewComplaints()
     {
-        // $count = Complaint::where('status', 'new')->count();
+        $count = Complaint::where('status', 'new')->count();
 
-        // return response()->json([
-        //     'new_complaints' => $count
-        // ]);
-        $count = Cache::remember('new_complaints_count', 60, function () {
-            return Complaint::where('status', 'new')->count();
-        });
-    
         return response()->json([
             'new_complaints' => $count
         ]);
+
     }
 
     public function getByConcerned($concerned)
@@ -109,14 +96,24 @@ class ComplaintController extends Controller
 
         $complaint = Complaint::findOrFail($id);
         $user = Auth::user();
-       // if ($complaint->theConcerned !== auth()->user()->department) {
-        if ($complaint->theConcerned !== $user->department) {
-            return response()->json(['error' => 'غير مسموح بتعديل شكوى ليست تابعة لجهتك'], 403);
+        if (!$user->hasAnyRole('admin')) {
+            if ($complaint->theConcerned !== $user->department) {
+                return response()->json(['error' => 'غير مسموح بتعديل شكوى ليست تابعة لجهتك'], 403);
+            }
         }
         $before = $complaint->toArray();
         $complaint->status = $request->status ?? $complaint->status;
         $complaint->notesForEmployee = $request->notesForEmployee;
         $complaint->save();
+        $complaintOwner = $complaint->user;
+    if ($complaintOwner && $complaintOwner->fcm_token) {
+       $this->firebase->sendNotification(
+            $complaintOwner->fcm_token,
+            'Update on Your Complaint',
+            'Your complaint status changed to: ' . $complaint->status
+        );
+    }
+
         $after = $complaint->toArray();
         ActivityLogger::log(
             'update_complaint',
@@ -125,5 +122,6 @@ class ComplaintController extends Controller
             $after
         );
         return new GetComplaintResource($complaint);
+
     }
 }

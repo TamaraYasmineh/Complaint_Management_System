@@ -27,7 +27,8 @@ class User extends Authenticatable
         'failed_attempts',
         'email_verified_at',
         'department',
-        'userId'
+        'userId',
+        'fcm_token'
 
     ];
 
@@ -52,11 +53,6 @@ class User extends Authenticatable
         'is_active' => 'boolean',
         'locked_until' => 'datetime',
     ];
-    public function otps()
-    {
-        return $this->hasMany(Otp::class);
-    
-    }
     public function activityLogs()
 {
     return $this->hasMany(Activity_log::class);
