@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ControlController;
+use App\Http\Controllers\FirebaseController;
 use App\Http\Controllers\ComplaintController;
 
 Route::get('/user', function (Request $request) {})->middleware('auth:sanctum');
@@ -45,3 +46,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 });
 Route::middleware(['auth:sanctum', 'role:citizen'])->group(function () {
 });
+
+Route::get('/firebase-test', [FirebaseController::class, 'test']);
+Route::post('/save-fcm-token', [FirebaseController::class, 'saveToken'])->middleware('auth:sanctum');

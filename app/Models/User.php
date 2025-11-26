@@ -27,7 +27,8 @@ class User extends Authenticatable
         'failed_attempts',
         'email_verified_at',
         'department',
-        'userId'
+        'userId',
+        'fcm_token'
 
     ];
 

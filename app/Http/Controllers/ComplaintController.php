@@ -16,13 +16,18 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Services\ActivityLogger;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Traits\HasRoles;
+use App\Http\Services\FirebaseService;
+
 class ComplaintController extends Controller
 {
     protected ComplaintService $service;
+    protected FirebaseService $firebase;
 
-    public function __construct(ComplaintService $service)
+    public function __construct(ComplaintService $service,FirebaseService $firebase)
     {
         $this->service = $service;
+        $this->firebase = $firebase;
+
     }
     public function store(ComplaintRequest $request)
     {
@@ -45,21 +50,18 @@ class ComplaintController extends Controller
             'totalComplaints' => $count
         ]);
 
-    return response()->json([
-        'totalComplaints' => $count
-    ]);
     }
 
     public function countPendingComplaints()
     {
-        
+
         $count = Complaint::where('status', 'pending')->count();
 
         return response()->json([
             'pending_complaints' => $count
         ]);
     }
-   
+
     public function countNewComplaints()
     {
         $count = Complaint::where('status', 'new')->count();
@@ -67,7 +69,7 @@ class ComplaintController extends Controller
         return response()->json([
             'new_complaints' => $count
         ]);
-       
+
     }
 
     public function getByConcerned($concerned)
@@ -103,6 +105,15 @@ class ComplaintController extends Controller
         $complaint->status = $request->status ?? $complaint->status;
         $complaint->notesForEmployee = $request->notesForEmployee;
         $complaint->save();
+        $complaintOwner = $complaint->user;
+    if ($complaintOwner && $complaintOwner->fcm_token) {
+       $this->firebase->sendNotification(
+            $complaintOwner->fcm_token,
+            'Update on Your Complaint',
+            'Your complaint status changed to: ' . $complaint->status
+        );
+    }
+
         $after = $complaint->toArray();
         ActivityLogger::log(
             'update_complaint',
@@ -111,5 +122,6 @@ class ComplaintController extends Controller
             $after
         );
         return new GetComplaintResource($complaint);
+
     }
 }

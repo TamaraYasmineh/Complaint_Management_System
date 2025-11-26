@@ -24,6 +24,7 @@ class UserLoginRequest extends FormRequest
         return [
             'email' => 'email|required',
             'password' => 'required',
+            'fcm_token' => 'nullable|string' // استقبال FCM token من الفرونت
         ];
     }
 }
